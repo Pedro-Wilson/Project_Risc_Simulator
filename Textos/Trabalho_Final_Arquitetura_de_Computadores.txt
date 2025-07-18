@@ -1,0 +1,67 @@
+
+Universidade Federal do Ceará
+Campus de Quixadá
+Trabalho Final – Arquitetura de Computadores
+Prof. Pedro Botelho
+26 de Junho de 2025
+
+1. Descrição
+O trabalho consiste em implementar um programa (em qualquer linguagem que suporte operações bit a bit, preferencialmente C ou C++) que simule a execução de um processador RISC, utilizando as instruções definidas na Tabela da Seção 3.
+[...]
+
+2. Especificação do Projeto
+
+2.1 Estrutura do Processador
+- Modelo: Von Neumann ou Harvard (escolha do aluno).
+- Palavra de memória: 16 bits.
+- Registradores: R0 a R15 (R14 = SP, R15 = PC).
+- Registradores especiais: IR, FLAGS (flags Zero e Carry).
+- Flags:
+  - Zero: resultado da ULA igual a 0.
+  - Carry: vai-um do bit 15 para o 16 (comparação sem sinal).
+- Saltos: baseados nas flags Z e C (unsigned).
+
+2.2 Estrutura do Simulador
+- Executa até HALT.
+- Saída:
+  - Registradores (iniciam zerados).
+  - Memória de Dados (0x0000 a 0x8000, mostrar apenas acessadas).
+  - Pilha (descendente, SP inicial = 0x8000, mostrar se alterada).
+  - Flags (Z e C).
+
+2.3 Sistema de Entrada e Saída (E/S)
+E/S mapeada em memória:
+  0xF000 - CHAR IN
+  0xF001 - INT IN
+  0xF002 - CHAR OUT
+  0xF003 - INT OUT
+[...]
+
+3. Conjunto de Instruções
+Instruções de salto:
+  JMP - Salta sempre
+  JEQ - Salta se Z = 1
+  JNE - Salta se Z = 0
+  JLT - Salta se Z = 0 e C = 1
+  JGE - Salta se Z = 1 ou C = 0
+
+- Cada instrução possui 16 bits (opcode nos 4 bits superiores).
+- Modo de endereçamento: único por instrução.
+- JMP #0 é NOP.
+
+Exemplos de instruções (ver tabela completa no original).
+[...]
+
+4. Avaliação e Entrega
+- Grupos de até 3 pessoas.
+- Avaliação presencial com testes.
+- Pontuação:
+  Simulação: 8 pontos
+  Estrutura/Interface: 1 ponto
+  Sistema de E/S: 1 ponto
+  Tradução Assembly: +2 pontos extras
+
+Assembly:
+- Código pode ter labels (saltos).
+- Tradução obrigatória se Assembly for usado.
+[...]

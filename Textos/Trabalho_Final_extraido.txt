@@ -1,0 +1,196 @@
+Campus de Quixad´ a Universidade Federal do Cear´ a
+Trabalho Final
+Arquitetura de Computadores
+Prof. Pedro Botelho
+26o.Junho de 2025
+1 Descri¸ c˜ ao
+Seu trabalho ser´ a implementar um programa (em qualquer linguagem que suporte opera¸ c˜ oes
+bit-a-bit, preferencialmente C ou C++) que simule a execu¸ c˜ ao de um processador RISC ,
+contendo as instru¸ c˜ oes mostradas na tabela fornecida na Se¸ c˜ ao 3.
+Considere que o processador possui uma palavra de dados e de instru¸ c˜ ao de 16 bits, e
+16 registradores de trabalho (R0-R15), onde R14 ´ e usado como ponteiro de pilha (SP) e
+R15 ´ e usado como contador de programa (PC). Adicionalmente, o processador possui os
+registradores de instru¸ c˜ ao (IR) e de estado (FLAGS).
+2 Especifica¸ c˜ ao do Projeto
+O simulador dever´ a receber como entrada um arquivo de texto contendo o c´ odigo a ser
+executado, em nota¸ c˜ ao hexadecimal (ou Assembly, vide Se¸ c˜ ao 4). Este arquivo representa
+a mem´ oria de programa, onde cada linha corresponde a um endere¸ co e a uma instru¸ c˜ ao,
+no formato <endere¸ co >:<conte´ udo >. O preenchimento da mem´ oria de dados ´ e opcional ,
+podendo ser no mesmo arquivo, ap´ os as instru¸ c˜ oes, ou em arquivos separados.
+2.1 Estrutura do Processador
+O processador simulado pode usar o modelo de von Neumann (dados e instru¸ c˜ oes na mesma
+mem´ oria) ou Harvard (dados e instru¸ c˜ oes em mem´ orias diferentes), ficando a escolha a cargo
+do aluno. Ainda, cada posi¸ c˜ ao de mem´ oria guarda 16 bits.
+O processador possui apenas duas flags:zero (ativada quando o resultado da ULA ´ e zero)
+ecarry (ativada quando o resultado da ULA tem um vai-um do bit 15 para o 16 ativo).
+De forma a simplificar, a flag carry pode ser ativa quando Rn for maior que Rm, ou seja,
+quando o operando B da ULA for maior que o operando A, o que resulta no mesmo que
+verificar o bit do vai-um (em compara¸ c˜ oes sem sinal).
+Os saltos do processador s˜ ao baseados em compara¸ c˜ oes sem sinal (unsigned). Portanto,
+apenas as flags zero (Z) e carry (C) ser˜ ao usadas. Ao usar uma instru¸ c˜ ao de salto condicional,
+J<cond>, a condi¸ c˜ ao ser´ a avaliada com base nas flags de estado. Apenas as instru¸ c˜ oes da
+ULA modificam as flags.
+1
+2.2 Estrutura do Simulador
+O programa deve executar at´ e encontrar uma instru¸ c˜ ao HALT . Ao final da execu¸ c˜ ao, o
+simulador dever´ a apresentar o conte´ udo (em nota¸ c˜ ao hexadecimal, indicada pelo prefixo
+‘0x’) dos seguintes componentes:
+•Registradores : Todos iniciam zerados (R0-R13, PC e PC).
+•Mem´ oria de Dados : Assuma que a faixa de endere¸ cos de 0x0000 a 0x8000 est´ a
+dispon´ ıvel (endere¸ cos fora da faixa s˜ ao lidos como zero) e que a mem´ oria est´ a
+inicialmente zerada.
+–No mesmo formato do arquivo de entrada ( <endere¸ co >:<conte´ udo >).
+–Devem ser exibidas apenas as posi¸ c˜ oes que forem acessadas pelo c´ odigo
+(desconsiderando a pilha).
+•Pilha : Do tipo descendente (de um endere¸ co maior para um menor) e cheia (SP aponta
+para o ´ ultimo elemento empilhado).
+–No mesmo formato do arquivo de entrada ( <endere¸ co >:<conte´ udo >).
+–Assuma que o ponteiro de pilha com o valor inicial de 0x8000 da mem´ oria de
+dados, e que pilha possui tamb´ em um tamanho de 16 bits.
+–Devem ser exibida apenas se o ponteiro SP n˜ ao estiver em sua posi¸ c˜ ao original
+(0x8000).
+•Flags : Assuma que as todas iniciam zeradas.
+–Exiba os valores finais das flags carry e zero.
+Sempre que ocorrer uma pseudoinstru¸ c˜ ao NOP , o simulador deve exibir estas mesmas
+informa¸ c˜ oes (veja a Se¸ c˜ ao 3 para mais informa¸ c˜ oes sobre NOP).
+2.3 Sistema de Entrada e Sa´ ıda (E/S)
+O simulador deve fornecer ao usu´ ario um sistema b´ asico de entrada e sa´ ıda mapeado em
+mem´ oria.
+•0xF000 - Entrada CHAR IN (simulador lˆ e um caractere da entrada padr˜ ao e.g. fun¸ c˜ ao
+read)
+•0xF001 - Entrada INT IN (simulador lˆ e um inteiro da entrada padr˜ ao e.g. fun¸ c˜ ao
+scanf )
+•0xF002 - Sa´ ıda CHAR OUT (simulador escreve um caractere na sa´ ıda padr˜ ao e.g.
+fun¸ c˜ ao write )
+•0xF003 - Sa´ ıda INT OUT (simulador escreve um inteiro na sa´ ıda padr˜ ao e.g. fun¸ c˜ ao
+printf )
+Segue abaixo um exemplo em c´ odigo Assembly que acessa o sistema de E/S:
+1M O V R0 , #15 // Carrega o endereco de E/S
+2SHL R0 , #12
+3ADDI R4 , R0 , #1 // Obtem o endereco de INT IN
+4LDR R1 , [ R4 ] // Le um i n t e i r o de INT IN
+5LDR R2 , [ R4 ] // Le outro i n t e i r o de INT IN
+6ADD R3 , R1 , R2 // Soma ambos os i n t e i r o s
+7ADDI R4 , R0 , #3 // Obtem o endereco de INT IN
+8STR R3 , [ R4 ] // Escreve o r e s u l t a d o em INT OUT
+9HALT
+3 Conjunto de Instru¸ c˜ oes
+O processador que ser´ a simulado possui 19 instru¸ c˜ oes simples de 16 bits cada. Os 4 bits
+superiores das instru¸ c˜ oes indicam o c´ odigo da opera¸ c˜ ao ( opcode ). Ainda, os bits 11-10 das
+instru¸ c˜ oes J <cond>indicam a condi¸ c˜ ao para o salto, ou seja, o valor das flags para que o
+salto aconte¸ ca:
+•JMP ( Jump always ): Sempre salta
+•JEQ ( Jump if equal ): Salta quando a flagzero est´ a ativa
+•JNE ( Jump if not equal ): Salta quando a flagzero n˜ ao est´ a ativa
+•JLT ( Jump if less than ): Salta quando a flagzero n˜ ao est´ a ativa e a carry est´ a
+•JGE ( Jump if greater or equal ): Salta quando a flag carry n˜ ao est´ a ativa e a zero est´ a
+As instru¸ c˜ oes suportam apenas um modo de endere¸ camento cada, sendo eles registradores,
+mem´ oria e imediato. Ainda, com 4 bits para registradores, ´ e poss´ ıvel endere¸ car at´ e 16
+registradores (do R0 ao R15). Toda vez que uma instru¸ c˜ oes ´ e buscada seu PC ´ e incrementado
+em um, devendo sempre apontar para a pr´ oxima instru¸ c˜ ao antes de ser executado. Abaixo
+est˜ ao as instru¸ c˜ oes que o processador dever´ a suportar:
+Instru¸ c˜ ao Descri¸ c˜ ao Tipo 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
+JMP #Im PC = PC + #Im JUMP 0 0 0 0 Im11Im10Im9Im8Im7Im6Im5Im4Im3Im2Im1Im0
+JEQ #Im If ¬Z, then PC = PC + #Im JUMP 0 0 0 1 0 0 Im 9Im8Im7Im6Im5Im4Im3Im2Im1Im0
+JNE #Im If Z, then PC = PC + #Im JUMP 0 0 0 1 0 1 Im 9Im8Im7Im6Im5Im4Im3Im2Im1Im0
+JLT #Im If ¬Z and C, then PC = PC + #Im JUMP 0 0 0 1 1 0 Im 9Im8Im7Im6Im5Im4Im3Im2Im1Im0
+JGE #Im If Z or ¬C, then PC = PC + #Im JUMP 0 0 0 1 1 1 Im 9Im8Im7Im6Im5Im4Im3Im2Im1Im0
+LDR Rd, [Rm] Rd = MEM[Rm] LOAD 0 0 1 0 Rd3Rd2Rd1Rd0Rm 3Rm 2Rm 1Rm 0 - - - -
+STR Rn, [Rm] MEM[Rm] = Rn STORE 0 0 1 1 - - - - Rm 3Rm 2Rm 1Rm 0Rn3Rn2Rn1Rn0
+MOV Rd, #Im Rd = #Im MOVE 0 1 0 0 Rd3Rd2Rd1Rd0Im7Im6Im5Im4Im3Im2Im1Im0
+ADD Rd, Rm, Rn Rd = Rm + Rn ULA 0 1 0 1 Rd3Rd2Rd1Rd0Rm 3Rm 2Rm 1Rm 0Rn3Rn2Rn1Rn0
+ADDI Rd, Rm, #Im Rd = Rm + #Im ULA 0 1 1 0 Rd3Rd2Rd1Rd0Rm 3Rm 2Rm 1Rm 0Im3Im2Im1Im0
+SUB Rd, Rm, Rn Rd = Rm - Rn ULA 0 1 1 1 Rd3Rd2Rd1Rd0Rm 3Rm 2Rm 1Rm 0Rn3Rn2Rn1Rn0
+SUBI Rd, Rm, #Im Rd = Rm - #Im ULA 1 0 0 0 Rd3Rd2Rd1Rd0Rm 3Rm 2Rm 1Rm 0Im3Im2Im1Im0
+AND Rd, Rm, Rn Rd = Rm AND Rn ULA 1 0 0 1 Rd3Rd2Rd1Rd0Rm 3Rm 2Rm 1Rm 0Rn3Rn2Rn1Rn0
+OR Rd, Rm, Rn Rd = Rm OR Rn ULA 1 0 1 0 Rd3Rd2Rd1Rd0Rm 3Rm 2Rm 1Rm 0Rn3Rn2Rn1Rn0
+SHR Rd, Rm, #Im Rd = Rm >>#Im ULA 1 0 1 1 Rd3Rd2Rd1Rd0Rm 3Rm 2Rm 1Rm 0Im3Im2Im1Im0
+SHL Rd, Rm, #Im Rd = Rm <<#Im ULA 1 1 0 0 Rd3Rd2Rd1Rd0Rm 3Rm 2Rm 1Rm 0Im3Im2Im1Im0
+CMP Rm, Rn Z = (Rm = Rn); C = (Rm <Rn) ULA 1 1 0 1 - - - - Rm 3Rm 2Rm 1Rm 0Rn3Rn2Rn1Rn0
+PUSH Rn SP- -; MEM[SP] = Rn STACK 1 1 1 0 - - - - - - - - Rn 3Rn2Rn1Rn0
+POP Rd Rd = MEM[SP]; SP++ STACK 1 1 1 1 Rd3Rd2Rd1Rd0 - - - - - - - -
+HALT Para a execu¸ c˜ ao CONTROL 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+Como um JMP com deslocamento zero ´ e apenas um salto para a pr´ oxima instru¸ c˜ ao, um JMP
+#0 deve ser interpretado como uma pseudoinstru¸ c˜ ao NOP (no operation , ou seja, nada deve
+ser feito).
+4 Avalia¸ c˜ ao e Entrega
+Cada trabalho poder´ a ser feito em equipes de trˆ es, e dever´ a ser´ a apresentado ao professor,
+onde ser´ a submetido a casos de teste espec´ ıficos. Ser˜ ao verificadas as informa¸ c˜ oes mostradas
+ao final da execu¸ c˜ ao (e sempre que ocorrer uma instru¸ c˜ ao NOP).
+O projeto valer´ a 12 pontos, avaliado nos seguintes crit´ erios, estando a avalia¸ c˜ ao de cada
+crit´ erio a cargo do professor.
+1.Simula¸ c˜ ao : 8 pontos (Consegue simular a execu¸ c˜ ao de um programa?)
+2.Estrutura e Interface : 1 ponto (C´ odigo foi bem feito e modularizado? Possui uma
+interface em linha de comando bem feita?)
+3.Sistema de E/S : 1 ponto (Implementa o sistema de E/S de dados, conforme informa
+a Se¸ c˜ ao 2.3?)
+4.Tradu¸ c˜ ao : 2 pontos extras (Consegue traduzir as instru¸ c˜ oes em Assembly?)
+Conforme se vˆ e acima, o projeto pode receber 2 pontos extras caso, ao inv´ es de receber
+um c´ odigo na nota¸ c˜ ao hexadecimal, receber um c´ odigo em Assembly, devendo o programa o
+traduzir para que a execu¸ c˜ ao seja poss´ ıvel. Esse c´ odigo Assembly deve ser capaz de entender
+etiquetas ( labels ) de c´ odigo (para saltos). Etiquetas de dados s˜ ao opcionais.
+4.1 Exemplo de Entrada
+Seguem abaixo alguns exemplos de entrada em Assembly e seu hexadecimal equivalente:
+4.1.1 Exemplo 1
+Entrada:
+1M O V R0 , #3 0000: 0x4003
+2ADDI R2 , R0 , #2 0001: 0x6202
+3M O V R10 , #10 0002: 0x4A0A
+4STR R2 , [ R0 ] 0003: 0x3002
+5HALT 0004: 0xFFFF
+Sa´ ıda:
+1Registradores :
+2R0 : 0x0003
+3R1 : 0x0000
+4R2 : 0x0005
+5R3 : 0x0000
+6R4 : 0x0000
+7R5 : 0x0000
+8R6 : 0x0000
+9R7 : 0x0000
+10R8 : 0x0000
+11R9 : 0x0000
+12R10 : 0x000A
+13R11 : 0x0000
+14R12 : 0x0000
+15R13 : 0x0000
+16SP : 0x8000
+17PC: 0x0004
+18
+19Memoria de Dados :
+20000A: 0x0005
+21
+22Flags :
+23Z = 0
+24C = 0
+4.1.2 Exemplo 2
+1main : M O V R0 , #3 0000: 0x4003
+2 M O V R1 , #5 0001: 0x4105
+3loop : ADD R2 , R1 , R0 0002: 0x5210
+4 PUSH R2 0003: 0xE002
+5 POP R10 0004: 0xFA00
+6 SUB R2 , R10 , R1 0005: 0x72A1
+7 CMP R2 , R10 0006: 0xD02A
+8 JEQ loop 0007: 0x13FA
+9 HALT 0008: 0xFFFF
+1Registradores :
+2R0 : 0x0003
+3R1 : 0x0005
+4R2 : 0x0003
+5R3 : 0x0000
+6R4 : 0x0000
+7R5 : 0x0000
+8R6 : 0x0000
+9R7 : 0x0000
+10R8 : 0x0000
+11R9 : 0x0000
+12R10 : 0x0008
+13R11 : 0x0000
+14R12 : 0x0000
+15R13 : 0x0000
+16SP : 0x8000
+17PC: 0x0008
+18
+19Flags :
+20Z = 0
+21C = 1

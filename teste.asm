@@ -1,0 +1,5 @@
+MOV R0, #3
+ADDI R2, R0, #2
+MOV R10, #10
+STR R2, [R0]
+HALT
