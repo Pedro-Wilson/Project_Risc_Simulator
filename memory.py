@@ -20,7 +20,9 @@ class Memory:
         :param address: Endereço a ser lido (int)
         :return: Valor de 16 bits armazenado no endereço ou valor lido da E/S
         """
-        if 0x0000 <= address < 0x8000:
+
+        #if 0x0000 <= address < 0x8000:
+        if not (0 <= address < self.size):
             self.accessed.add(address)
             return self.mem[address] & 0xFFFF
         elif address == 0xF000:
