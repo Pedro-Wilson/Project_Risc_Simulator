@@ -143,7 +143,7 @@ Projeto desenvolvido para fins acadêmicos na disciplina de Arquitetura de Compu
 Desenvolvido por: Pedro Wilson C. Parreira  
 Professor responsável: Pedro Botelho  
 Campus de Quixadá – Universidade Federal do Ceará  
-Data: 09/07 à 17/07/2025 -- ainda não fincalizado 
+Data: 09/07 à 27/07/2025 -- ainda não fincalizado 
 
 
 ---
