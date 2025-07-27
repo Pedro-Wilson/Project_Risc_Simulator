@@ -1,39 +1,35 @@
-main:   MOV R10, #0xF0      
-        SHL R11, R10, #8    
-        ADDI R12, R11, #1   
-        LDR R1, [R12]       
-        PUSH R1             
-        MOV R13, #0         
-
-read:   CMP R1, R13         
-        JEQ call            
-        LDR R5, [R12]       
-        STR R5, [R10]       
-        ADDI R10, R10, #1   
-        SUBI R1, R1, #1     
-        JMP read            
-
-call:   POP R1              
-        SUB R0, R10, R1     
-        ADDI R10, PC, #2    
-        PUSH R10            
-        JMP arrsum          
-
-print:  ADDI R12, R11, #3   
-        STR R0, [R12]       
-        HALT                
-
-arrsum: PUSH R4             
-        PUSH R5             
-        ADDI R4, R1, #0     
-        JEQ exit            
-        MOV R4, #0x00       
-loop:   LDR R5, [R0]        
-        ADD R4, R4, R5      
-        ADDI R0, R0, #1     
-        SUBI R1, R1, #1     
-        JNE loop            
-        ADDI R0, R4, #0     
-exit:   POP R5              
-        POP R4              
-        POP PC              
+0000:7AF0
+0001:EBA8
+0002:9CB1
+0003:51C0
+0004:E301
+0005:7D00
+0006:E21D
+0007:1006
+0008:55C0
+0009:60A5
+000A:9AA1
+000B:B111
+000C:0FFA
+000D:E500
+000E:A0A1
+000F:9AF2
+0010:E30A
+0011:0004
+0012:9CB3
+0013:60C0
+0014:FFFF
+0015:E304
+0016:E305
+0017:9410
+0018:1008
+0019:7400
+001A:5500
+001B:8445
+001C:9001
+001D:B111
+001E:23FC
+001F:9040
+0020:E500
+0021:E400
+0022:EF00
