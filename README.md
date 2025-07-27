@@ -145,7 +145,5 @@ Professor responsável: Pedro Botelho
 Campus de Quixadá – Universidade Federal do Ceará  
 Data: 09/07 à 17/07/2025 -- ainda não fincalizado 
 
-Porcentage de avanço : 80%
-obs.: 100% significa trabalo + pontos extras
 
 ---

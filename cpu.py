@@ -7,7 +7,6 @@ def sign_extend(val, bits):
         return val | (~((1 << bits) - 1) & 0xFFFF)
     return val & ((1 << bits) - 1)
 
-# Tabela de opcodes conforme especificação do edital
 OPCODES = {
     0x0: 'JMP',
     0x1: 'JEQ',
@@ -29,24 +28,18 @@ OPCODES = {
 
 class CPU:
     def __init__(self):
-        # 16 registradores de 16 bits (R0-R15)
         self.regs = [0] * 16
-        # R14: Stack Pointer (SP), R15: Program Counter (PC)
         self.SP = 14
         self.PC = 15
-        # Registrador de instrução (IR)
         self.ir = 0
-        # FLAGS: 16 bits, mas só Z (bit 0) e C (bit 1) são usados
         self.FLAGS = 0
-        # Registro de endereços da pilha alterados
         self.stack_accessed = set()
 
     def reset(self):
-        """Zera todos os registradores, IR, FLAGS e inicializa SP."""
         self.regs = [0] * 16
         self.ir = 0
         self.FLAGS = 0
-        self.sp = 0x8000  # Inicializa SP no topo da pilha
+        self.sp = 0x8000
         self.stack_accessed.clear()
 
     @property
@@ -67,7 +60,6 @@ class CPU:
 
     @property
     def z(self):
-        """Flag Zero (bit 0 do FLAGS)"""
         return (self.FLAGS & 0x1) != 0
 
     @z.setter
@@ -79,7 +71,6 @@ class CPU:
 
     @property
     def c(self):
-        """Flag Carry (bit 1 do FLAGS)"""
         return (self.FLAGS & 0x2) != 0
 
     @c.setter
@@ -90,73 +81,50 @@ class CPU:
             self.FLAGS &= ~0x2
 
     def update_flags(self, result, carry=False):
-        """Atualiza as flags Z e C após operação da ULA."""
         self.z = (result & 0xFFFF) == 0
         self.c = carry
 
     def set_ir(self, value):
-        """Define o valor do registrador de instrução (IR)."""
         self.ir = value & 0xFFFF
 
     def get_ir(self):
-        """Obtém o valor do registrador de instrução (IR)."""
         return self.ir
 
     def push(self, memory, value):
-        """
-        Empilha um valor na pilha descendente.
-        :param memory: Instância da memória
-        :param value: Valor de 16 bits a ser empilhado
-        """
+        print(f"PUSH: SP antes = 0x{self.sp:04X}, valor = 0x{value:04X}")
         if self.sp == 0x0000:
             raise OverflowError("Stack overflow: SP atingiu o limite inferior da memória.")
         self.sp -= 1
         memory.write(self.sp, value)
         self.stack_accessed.add(self.sp)
+        print(f"PUSH: SP depois = 0x{self.sp:04X}")
 
     def pop(self, memory):
-        """
-        Desempilha um valor da pilha descendente.
-        :param memory: Instância da memória
-        :return: Valor de 16 bits desempilhado
-        """
+        print(f"POP: SP antes = 0x{self.sp:04X}")
         if self.sp >= 0x8000:
             raise OverflowError("Stack underflow: SP atingiu o topo da pilha.")
         value = memory.read(self.sp)
         self.stack_accessed.add(self.sp)
         self.sp += 1
+        print(f"POP: SP depois = 0x{self.sp:04X}, valor = 0x{value:04X}")
         return value
 
     def get_stack_accessed(self):
-        """
-        Retorna os endereços da pilha que foram alterados durante a execução.
-        """
         return sorted(self.stack_accessed)
 
     def execute_instruction(self, instr, memory):
-        """
-        Decodifica e executa uma instrução de 16 bits conforme a tabela do edital.
-        :param instr: instrução de 16 bits (int)
-        :param memory: instância da memória
-        """
         opcode = (instr >> 12) & 0xF
         op = OPCODES.get(opcode, 'NOP')
 
-        # Campos comuns
         rd = (instr >> 8) & 0xF
         rm = (instr >> 4) & 0xF
         rn = instr & 0xF
         imm8 = instr & 0xFF
         imm4 = instr & 0xF
-        addr12 = instr & 0x0FFF
-        imm12 = sign_extend(instr & 0x0FFF, 12)
-        imm10 = sign_extend(instr & 0x3FF, 10)
 
-        # JMP e saltos
         if op == 'JMP':
             offset = sign_extend(instr & 0x0FFF, 12)
             if offset == 0:
-                # NOP (JMP #0)
                 return True
             self.pc = (self.pc + offset) & 0xFFFF
             return True
@@ -219,6 +187,7 @@ class CPU:
             result = self.regs[rm] & self.regs[rn]
             self.regs[rd] = result
             self.update_flags(result)
+            print(f"AND: R{rd} = 0x{result:04X}")
             return True
         elif op == 'OR':
             result = self.regs[rm] | self.regs[rn]
@@ -226,7 +195,6 @@ class CPU:
             self.update_flags(result)
             return True
         elif op == 'MISC':
-            # Subopcodes para SHR, SHL, CMP, PUSH, POP
             subop = (instr >> 8) & 0xF
             if subop == 0x0:  # SHR Rd, Rm, #Im
                 result = (self.regs[rm] >> imm4) & 0xFFFF
@@ -237,28 +205,36 @@ class CPU:
                 self.regs[rd] = result
                 self.update_flags(result)
             elif subop == 0x2:  # CMP Rm, Rn
-                z = self.regs[rm] == self.regs[rn]
-                c = self.regs[rm] < self.regs[rn]
-                self.z = z
-                self.c = c
+                self.z = self.regs[rm] == self.regs[rn]
+                self.c = self.regs[rm] < self.regs[rn]
             elif subop == 0x3:  # PUSH Rn
+                print(f"PUSH instruction: registrador R{rn} = 0x{self.regs[rn]:04X}")
                 self.push(memory, self.regs[rn])
-            elif subop == 0x4:  # POP Rd
-                self.regs[rd] = self.pop(memory)
+                print(f"SP após PUSH: 0x{self.sp:04X}")
+            elif subop == 0x4:  # POP Rd (bits 7-4)
+                rd_pop = (instr >> 4) & 0xF
+                value = self.pop(memory)
+                self.regs[rd_pop] = value
+                print(f"POP instruction: registrador R{rd_pop} = 0x{value:04X}")
+                print(f"SP após POP: 0x{self.sp:04X}")
             return True
         elif op == 'HALT':
-            return False  # Sinaliza parada
+            return False
         else:
-            pass  # Instrução desconhecida: NOP
+            return True
 
-        return True  # Continua execução
-
-# Exemplo de ciclo principal (coloque no main.py):
+# Exemplo de ciclo principal (para colocar no main.py):
 def run(cpu, memory):
     cpu.reset()
     running = True
+    instruction_count = 0
+    max_instructions = 10000
     while running:
         instr = memory.read(cpu.pc)
         cpu.set_ir(instr)
         cpu.pc = (cpu.pc + 1) & 0xFFFF
         running = cpu.execute_instruction(instr, memory)
+        instruction_count += 1
+        if instruction_count >= max_instructions:
+            print("WARNING: Limite máximo de instruções executadas atingido. Possível loop infinito.")
+            break

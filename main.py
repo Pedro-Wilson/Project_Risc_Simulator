@@ -49,6 +49,12 @@ def main():
     cpu = CPU()
     memory = Memory()
     load_program(memory, sys.argv[1])
+    # Ajustar PC para o menor endereço carregado
+    loaded_addresses = [addr for addr, val in enumerate(memory.mem) if val != 0]
+    if loaded_addresses:
+        cpu.pc = min(loaded_addresses)
+    else:
+        cpu.pc = 0
     run(cpu, memory)
     print_state(cpu, memory)
 

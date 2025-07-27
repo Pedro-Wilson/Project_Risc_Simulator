@@ -3,7 +3,6 @@
 
 import io
 
-
 class Memory:
     def __init__(self, size=0x10000):
         """
@@ -20,9 +19,7 @@ class Memory:
         :param address: Endereço a ser lido (int)
         :return: Valor de 16 bits armazenado no endereço ou valor lido da E/S
         """
-
-        #if 0x0000 <= address < 0x8000:
-        if not (0 <= address < self.size):
+        if 0 <= address < self.size:
             self.accessed.add(address)
             return self.mem[address] & 0xFFFF
         elif address == 0xF000:
@@ -30,7 +27,8 @@ class Memory:
         elif address == 0xF001:
             return io.read_int()
         else:
-            raise ValueError(f"Endereço de leitura inválido: {hex(address)}")
+            # Endereço inválido ou fora da faixa válida e E/S
+            return 0
 
     def write(self, address, value):
         """
@@ -38,7 +36,7 @@ class Memory:
         :param address: Endereço a ser escrito (int)
         :param value: Valor a ser armazenado (int, 16 bits)
         """
-        if 0x0000 <= address < 0x8000:
+        if 0 <= address < self.size:
             self.mem[address] = value & 0xFFFF
             self.accessed.add(address)
         elif address == 0xF002:
@@ -46,7 +44,8 @@ class Memory:
         elif address == 0xF003:
             io.write_int(value)
         else:
-            raise ValueError(f"Endereço de escrita inválido: {hex(address)}")
+            # Ignora escritas fora da faixa válida e E/S
+            return
 
     def get_accessed(self):
         """

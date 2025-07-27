@@ -82,10 +82,14 @@ def assemble_line(line, labels, addr):
             offset = parse_imm(args[0])
         code = (opcode << 12) | (offset & 0x03FF)
     elif instr == 'LDR':
+        if len(args) != 2 or not (args[1].startswith('[') and args[1].endswith(']')):
+            raise ValueError(f"Formato inválido para LDR: {args}")
         rd = parse_reg(args[0])
         rm = parse_reg(args[1][1:-1])  # [Rm]
         code = (opcode << 12) | (rd << 8) | (rm << 4)
     elif instr == 'STR':
+        if len(args) != 2 or not (args[1].startswith('[') and args[1].endswith(']')):
+            raise ValueError(f"Formato inválido para STR: {args}")
         rn = parse_reg(args[0])
         rm = parse_reg(args[1][1:-1])  # [Rm]
         code = (opcode << 12) | (rm << 4) | rn
@@ -127,12 +131,12 @@ def assemble_line(line, labels, addr):
         rd = parse_reg(args[0])
         rm = parse_reg(args[1])
         im = parse_imm(args[2])
-        code = (0xE << 12) | (0x0 << 8) | (rd << 8) | (rm << 4) | (im & 0xF)
+        code = (0xE << 12) | (0x0 << 8) | (rd << 4) | (rm << 0) | (im & 0xF)
     elif instr == 'SHL':
         rd = parse_reg(args[0])
         rm = parse_reg(args[1])
         im = parse_imm(args[2])
-        code = (0xE << 12) | (0x1 << 8) | (rd << 8) | (rm << 4) | (im & 0xF)
+        code = (0xE << 12) | (0x1 << 8) | (rd << 4) | (rm << 0) | (im & 0xF)
     elif instr == 'CMP':
         rm = parse_reg(args[0])
         rn = parse_reg(args[1])
@@ -142,7 +146,7 @@ def assemble_line(line, labels, addr):
         code = (0xE << 12) | (0x3 << 8) | rn
     elif instr == 'POP':
         rd = parse_reg(args[0])
-        code = (0xE << 12) | (0x4 << 8) | (rd << 8)
+        code = (0xE << 12) | (0x4 << 8) | (rd << 4)
     elif instr == 'HALT':
         code = 0xFFFF
     elif instr == 'NOP':
