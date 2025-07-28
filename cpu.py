@@ -155,8 +155,9 @@ class CPU:
         elif op == 'STR':
             memory.write(self.regs[rm], self.regs[rn])
             return True
-        elif op == 'MOV':
-            self.regs[rd] = imm8
+        elif op == 'MOV' or opcode == 0x4:
+            immediate = instr & 0xFF
+            self.regs[rd] = immediate
             self.update_flags(self.regs[rd])
             return True
         elif op == 'ADD':
