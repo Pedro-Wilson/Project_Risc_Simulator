@@ -11,22 +11,22 @@ OPCODES = {
     'JNE':  0x2,
     'JLT':  0x3,
     'JGE':  0x4,
-    'LDR':  0x5,
-    'STR':  0x6,
-    'MOV':  0x7,
-    'ADD':  0x8,
-    'ADDI': 0x9,
-    'SUB':  0xA,
-    'SUBI': 0xB,
-    'AND':  0xC,
-    'OR':   0xD,
-    'SHR':  0xE0,  # MISC subop 0
-    'SHL':  0xE1,  # MISC subop 1
-    'CMP':  0xE2,  # MISC subop 2
-    'PUSH': 0xE3,  # MISC subop 3
-    'POP':  0xE4,  # MISC subop 4
-    'HALT': 0xF,
-    'NOP':  0x0,   # NOP é JMP #0
+    'MOV': 0x4,     # MOV Rd, #im     opcode=0x4
+    'LDR': 0x2,     # LDR Rd, [Rm]    opcode=0x2
+    'STR': 0x3,     # STR [Rm], Rn    opcode=0x3
+    'ADD': 0x5,     # ADD Rd, Rm, Rn  opcode=0x5
+    'ADDI': 0x6,    # ADDI Rd, Rm, #im opcode=0x6
+    'SUB': 0x7,     # SUB Rd, Rm, Rn  opcode=0x7
+    'SUBI': 0x8,    # SUBI Rd, Rm, #im opcode=0x8
+    'AND': 0x9,     # AND Rd, Rm, Rn  opcode=0x9
+    'OR':  0xA,     # OR  Rd, Rm, Rn  opcode=0xA
+    'SHR': 0xE0,    # MISC
+    'SHL': 0xE1,
+    'CMP': 0xE2,
+    'PUSH': 0xE3,
+    'POP': 0xF0,    # POP Rd → opcode 0xF com reg no nibble alto
+    'HALT': 0xFFFF,
+    'NOP': 0x0000,
 }
 
 REGS = {f'R{i}': i for i in range(16)}
@@ -146,7 +146,8 @@ def assemble_line(line, labels, addr):
         code = (0xE << 12) | (0x3 << 8) | rn
     elif instr == 'POP':
         rd = parse_reg(args[0])
-        code = (0xE << 12) | (0x4 << 8) | (rd << 4)
+        code = (0xF << 12) | (rd << 4)
+        #code = (0xE << 12) | (0x4 << 8) | (rd << 4)
     elif instr == 'HALT':
         code = 0xFFFF
     elif instr == 'NOP':
